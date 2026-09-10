@@ -208,6 +208,10 @@
     font-weight:700;
     font-size:16px;
   }
+  .song-tools{max-width:560px;margin:8px auto 0;display:flex;gap:8px;align-items:center;}
+  .youtube-btn{display:inline-flex;align-items:center;justify-content:center;background:#e62117;color:#fff;text-decoration:none;border-radius:10px;padding:10px 13px;font-size:13px;font-weight:600;white-space:nowrap;}
+  .youtube-btn.disabled{opacity:.45;pointer-events:none;}
+  .song-confirm{display:block;width:100%;max-width:560px;margin:10px auto 0;padding:11px;border:1px solid var(--gold);border-radius:12px;background:transparent;color:var(--gold);font-weight:600;cursor:pointer;}
   .skip-btn{
     margin-top:8px;
     background:none;
@@ -306,18 +310,18 @@ const steps = [
   {id:'cerimonia_location', section:'Cerimonia', type:'text', q:'Dove si terrà la cerimonia? 📍', ph:'Luogo cerimonia', condition:a=>a.cerimonia_stessa_location==='No'},
   {id:'cerimonia_orario', section:'Cerimonia', type:'time', q:'A che ora è prevista la cerimonia? ⏰'},
   {id:'cerimonia_tipo', section:'Cerimonia', type:'choice', q:'Che tipo di cerimonia sarà?', options:['💍 Civile','❤️ Simbolica','⛪ Religiosa','Altro']},
-  {id:'ingresso_sposo', section:'Cerimonia', type:'text', q:"Quale brano desiderate per l'ingresso dello sposo? 🎵\nScrivete titolo e artista.", ph:'Titolo - Artista', optional:true},
-  {id:'ingresso_sposa', section:'Cerimonia', type:'text', q:"Quale brano desiderate per l'ingresso della sposa? 👰🎵", ph:'Titolo - Artista', optional:true},
-  {id:'scambio_fedi', section:'Cerimonia', type:'text', q:'Desiderate un brano durante lo scambio delle fedi? 💍\nSe sì, indicate titolo e artista.', ph:'Titolo - Artista, oppure "no"', optional:true},
-  {id:'firme_musica', section:'Cerimonia', type:'text', q:'È previsto un momento musicale durante le firme? Se sì, quale brano desiderate?', ph:'Titolo - Artista, oppure "no"', optional:true},
-  {id:'uscita_cerimonia', section:'Cerimonia', type:'text', q:'Quale brano desiderate per l\'uscita degli sposi dalla cerimonia? 🎉', ph:'Titolo - Artista', optional:true},
+  {id:'ingresso_sposo', section:'Cerimonia', type:'song', q:"Quale brano desiderate per l'ingresso dello sposo? 🎵\nCercatelo su YouTube e confermate la versione esatta.", ph:'Titolo - Artista', optional:true},
+  {id:'ingresso_sposa', section:'Cerimonia', type:'song', q:"Quale brano desiderate per l'ingresso della sposa? 👰🎵\nCercatelo su YouTube e confermate la versione esatta.", ph:'Titolo - Artista', optional:true},
+  {id:'scambio_fedi', section:'Cerimonia', type:'song', q:'Desiderate un brano durante lo scambio delle fedi? 💍\nCercatelo su YouTube e confermate la versione esatta.', ph:'Titolo - Artista', optional:true},
+  {id:'firme_musica', section:'Cerimonia', type:'song', q:'È previsto un momento musicale durante le firme? Se sì, cercate il brano su YouTube e confermate la versione esatta.', ph:'Titolo - Artista', optional:true},
+  {id:'uscita_cerimonia', section:'Cerimonia', type:'song', q:'Quale brano desiderate per l\'uscita degli sposi dalla cerimonia? 🎉\nCercatelo su YouTube e confermate la versione esatta.', ph:'Titolo - Artista', optional:true},
   {id:'cerimonia_altro', section:'Cerimonia', type:'text', q:'Ci sono altri momenti della cerimonia che desiderate accompagnare con una musica particolare?', ph:'Racconta pure', optional:true},
 
   {id:'arrivo_invitati', section:'Ricevimento', type:'time', q:'A che ora è previsto l\'arrivo degli invitati al ricevimento?'},
   {id:'aperitivo', section:'Ricevimento', type:'yesno', q:'È previsto un aperitivo?'},
   {id:'aperitivo_dove', section:'Ricevimento', type:'text', q:'Dove si svolgerà l\'aperitivo?', ph:'Luogo', condition:a=>a.aperitivo==='Sì'},
   {id:'ingresso_sposi_orario', section:'Ricevimento', type:'time', q:"A che ora è previsto l'ingresso degli sposi nella location/sala?"},
-  {id:'ingresso_sposi_brano', section:'Ricevimento', type:'text', q:'Avete scelto il brano per il vostro ingresso come sposi? ❤️\nScrivete titolo e artista.', ph:'Titolo - Artista', optional:true},
+  {id:'ingresso_sposi_brano', section:'Ricevimento', type:'song', q:'Avete scelto il brano per il vostro ingresso come sposi? ❤️\nCercatelo su YouTube e confermate la versione esatta.', ph:'Titolo - Artista', optional:true},
   {id:'ingresso_stile', section:'Ricevimento', type:'choice', q:'Come desiderate che sia l\'ingresso?', options:['🎉 Esplosivo e festoso','❤️ Romantico','🕺 Divertente','🔥 Molto coinvolgente','✨ Elegante']},
 
   {id:'cena_orario', section:'Cena / Pranzo', type:'time', q:'A che ora è previsto l\'inizio della cena/pranzo?'},
@@ -325,11 +329,11 @@ const steps = [
   {id:'cena_interventi', section:'Cena / Pranzo', type:'yesno', q:'Sono previsti interventi di amici o parenti con il microfono?'},
   {id:'cena_note', section:'Cena / Pranzo', type:'text', q:'Ci sono momenti particolari durante la cena che dobbiamo conoscere?', ph:'Racconta pure', optional:true},
 
-  {id:'primo_ballo', section:'Momenti speciali', type:'text', q:'Avete già scelto il brano per il vostro primo ballo? ❤️', ph:'Titolo - Artista', optional:true},
-  {id:'torta_brano', section:'Momenti speciali', type:'text', q:'Quale brano desiderate per il taglio della torta? 🎂', ph:'Titolo - Artista', optional:true},
-  {id:'bouquet_brano', section:'Momenti speciali', type:'text', q:'Quale brano desiderate per il lancio del bouquet? 💐', ph:'Titolo - Artista', optional:true},
+  {id:'primo_ballo', section:'Momenti speciali', type:'song', q:'Avete già scelto il brano per il vostro primo ballo? ❤️\nCercatelo su YouTube e confermate la versione esatta.', ph:'Titolo - Artista', optional:true},
+  {id:'torta_brano', section:'Momenti speciali', type:'song', q:'Quale brano desiderate per il taglio della torta? 🎂\nCercatelo su YouTube e confermate la versione esatta.', ph:'Titolo - Artista', optional:true},
+  {id:'bouquet_brano', section:'Momenti speciali', type:'song', q:'Quale brano desiderate per il lancio del bouquet? 💐\nCercatelo su YouTube e confermate la versione esatta.', ph:'Titolo - Artista', optional:true},
   {id:'giarrettiera', section:'Momenti speciali', type:'yesno', q:'È previsto il lancio della giarrettiera?'},
-  {id:'giarrettiera_brano', section:'Momenti speciali', type:'text', q:'Quale brano desiderate utilizzare per la giarrettiera?', ph:'Titolo - Artista', condition:a=>a.giarrettiera==='Sì', optional:true},
+  {id:'giarrettiera_brano', section:'Momenti speciali', type:'song', q:'Quale brano desiderate utilizzare per la giarrettiera?\nCercatelo su YouTube e confermate la versione esatta.', ph:'Titolo - Artista', condition:a=>a.giarrettiera==='Sì', optional:true},
   {id:'altri_momenti', section:'Momenti speciali', type:'text', q:'Avete previsto altri momenti speciali, sorprese o coreografie durante la festa?', ph:'Racconta pure', optional:true},
 
   {id:'mood', section:'Mood della festa', type:'multi', q:'Che tipo di festa desiderate? Potete scegliere più opzioni:', options:['🔥 Super movimentata','🕺 Tantissimo ballo','🎉 Festa equilibrata','🥂 Elegante e raffinata','🇮🇹 Musica italiana','🌎 Musica internazionale','🪩 Revival','🎧 Dance / House','💃 Commerciale / Pop','🎸 Rock','🎤 Karaoke','🎶 Un po\' di tutto']},
@@ -457,6 +461,54 @@ function renderInput(step){
     };
     area.appendChild(confirm);
 
+  } else if(step.type === 'song'){
+    const row = document.createElement('div'); row.className='row';
+    if(idx > 0){
+      const back = document.createElement('button');
+      back.className = 'back-btn';
+      back.textContent = '←';
+      back.type = 'button';
+      back.setAttribute('aria-label', 'Torna alla domanda precedente');
+      back.onclick = goBack;
+      row.appendChild(back);
+    }
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = step.ph;
+    if(answers[step.id] && answers[step.id] !== 'Non specificato' && answers[step.id] !== '—'){
+      input.value = answers[step.id].replace(/\s+— YouTube: https:\/\/www\.youtube\.com\/results\?search_query=.*$/,'');
+    }
+    const send = document.createElement('button'); send.className='send-btn'; send.textContent='→'; send.type='button';
+    row.append(input, send);
+    area.appendChild(row);
+    const tools = document.createElement('div'); tools.className='song-tools';
+    const youtube = document.createElement('a'); youtube.className='youtube-btn disabled'; youtube.textContent='Cerca su YouTube'; youtube.target='_blank'; youtube.rel='noopener';
+    const updateSearch = ()=>{
+      const query = input.value.trim();
+      youtube.href = query ? 'https://www.youtube.com/results?search_query='+encodeURIComponent(query) : '#';
+      youtube.classList.toggle('disabled', !query);
+    };
+    input.addEventListener('input', updateSearch);
+    updateSearch();
+    tools.appendChild(youtube);
+    area.appendChild(tools);
+    const submit = ()=>{
+      const val = input.value.trim();
+      if(!val){
+        if(step.optional) advance(step, '—', 'Non specificato');
+        return;
+      }
+      const url = 'https://www.youtube.com/results?search_query='+encodeURIComponent(val);
+      advance(step, val+' — YouTube: '+url);
+    };
+    send.onclick = submit;
+    input.addEventListener('keydown', e=>{ if(e.key==='Enter') submit(); });
+    if(step.optional){
+      const skip = document.createElement('button'); skip.className='skip-btn'; skip.textContent='Nessuna preferenza / salta';
+      skip.onclick=()=>advance(step, '—', 'Non specificato');
+      area.appendChild(skip);
+    }
+    setTimeout(()=>input.focus(), 50);
   } else {
     const row = document.createElement('div'); row.className='row';
     if(idx > 0){
