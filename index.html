@@ -171,7 +171,7 @@
     border-top:1px solid #2a2438;
     background:rgba(20,18,28,.98);
   }
-  .choices{display:flex; flex-wrap:wrap; gap:8px;}
+  .choices{display:flex; flex-wrap:wrap; justify-content:center; gap:8px; max-width:560px; margin:0 auto;}
   .chip{
     background:var(--panel);
     border:1px solid #3a3350;
@@ -184,10 +184,7 @@
   }
   .chip:hover{border-color:var(--gold); color:var(--gold);}
   .chip.selected{background:var(--gold); color:#1a1420; border-color:var(--gold); font-weight:600;}
-  .step-navigation{display:flex;justify-content:flex-start;align-items:center;margin-top:10px;gap:10px;}
-  .back-btn{background:none;border:1px solid #3a3350;color:var(--text-dim);padding:9px 14px;border-radius:999px;font-size:13px;cursor:pointer;}
-  .back-btn:disabled{opacity:.35;cursor:default;}
-  .row{display:flex; gap:8px;}
+  .row{display:flex; gap:8px; max-width:560px; margin:0 auto;}
   input[type=text], input[type=number], input[type=date], input[type=time], textarea{
     flex:1;
     background:var(--panel);
@@ -222,6 +219,10 @@
   .confirm-btn{
     margin-top:10px;
     width:100%;
+    max-width:560px;
+    display:block;
+    margin-left:auto;
+    margin-right:auto;
     background:var(--gold);
     border:none;
     color:#1a1420;
@@ -389,13 +390,6 @@ function renderStep(){
   renderInput(step);
 }
 
-function goBack(){
-  if(idx === 0) return;
-  idx--;
-  while(idx > 0 && steps[idx].condition && !steps[idx].condition(answers)) idx--;
-  renderStep();
-}
-
 function addMsg(text, cls){
   const m = document.createElement('div');
   m.className = 'msg '+cls;
@@ -416,15 +410,6 @@ function advance(step, displayValue, storedValue){
 function renderInput(step){
   const area = document.getElementById('inputArea');
   area.innerHTML = '';
-  const navigation = document.createElement('div');
-  navigation.className = 'step-navigation';
-  const back = document.createElement('button');
-  back.className = 'back-btn';
-  back.textContent = '← Indietro';
-  back.disabled = idx === 0;
-  back.onclick = goBack;
-  navigation.appendChild(back);
-  area.appendChild(navigation);
 
   if(step.type === 'yesno'){
     const wrap = document.createElement('div'); wrap.className='choices';
