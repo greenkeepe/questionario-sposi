@@ -570,16 +570,73 @@ async function finish(){
   // Invio al Google Sheet
   if(GOOGLE_SCRIPT_URL && !GOOGLE_SCRIPT_URL.includes('INCOLLA_QUI')){
     try{
+      // Prepariamo i dati in un array ordinato per le colonne del foglio
+      const rowData = [
+        new Date().toISOString(), // Colonna A: Timestamp
+        answers.nomi || 'Sposi',  // Colonna B: Nomi
+        answers.data || '',       // Colonna C: Data matrimonio
+        answers.location || '',   // Colonna D: Location
+        answers.invitati || '',   // Colonna E: Invitati
+        answers.inizio_evento || '', // Colonna F: Inizio evento
+        answers.cerimonia_stessa_location || '',
+        answers.cerimonia_location || '',
+        answers.cerimonia_orario || '',
+        answers.cerimonia_tipo || '',
+        answers.ingresso_sposo || '',
+        answers.ingresso_sposa || '',
+        answers.scambio_fedi || '',
+        answers.firme_musica || '',
+        answers.uscita_cerimonia || '',
+        answers.cerimonia_altro || '',
+        answers.arrivo_invitati || '',
+        answers.aperitivo || '',
+        answers.aperitivo_dove || '',
+        answers.ingresso_sposi_orario || '',
+        answers.ingresso_sposi_brano || '',
+        answers.ingresso_stile || '',
+        answers.cena_orario || '',
+        answers.cena_discorsi || '',
+        answers.cena_interventi || '',
+        answers.cena_note || '',
+        answers.primo_ballo || '',
+        answers.torta_brano || '',
+        answers.bouquet_brano || '',
+        answers.giarrettiera || '',
+        answers.giarrettiera_brano || '',
+        answers.altri_momenti || '',
+        answers.mood || '',
+        answers.tre_parole || '',
+        answers.generi_preferiti || '',
+        answers.artisti_preferiti || '',
+        answers.canzoni_coppia || '',
+        answers.canzoni_must || '',
+        answers.generi_evitare || '',
+        answers.artisti_evitare || '',
+        answers.da_evitare || '',
+        answers.eta_media || '',
+        answers.bambini || '',
+        answers.stranieri || '',
+        answers.nazionalita || '',
+        answers.giochi || '',
+        answers.giochi_dettagli || '',
+        answers.incaricato_scherzi || '',
+        answers.dediche_microfono || '',
+        answers.sorprese || '',
+        answers.impianto_audio || '',
+        answers.spazio_dj || '',
+        answers.orari_montaggio || '',
+        answers.limitazioni || '',
+        answers.ultima || '',
+        lastSummary // Mettiamo il riepilogo testuale in un'ultima colonna
+      ];
+
       await fetch(GOOGLE_SCRIPT_URL, {
         method:'POST',
         mode:'no-cors',
         headers:{'Content-Type':'text/plain'},
         body: JSON.stringify({
-          nomi: answers.nomi || 'Sposi',
-          data: answers.data || '',
-          timestamp: new Date().toISOString(),
-          summary: lastSummary,
-          answers
+          row: rowData,           // Inviamo l'array di valori
+          summary: lastSummary    // Teniamo il riepilogo per sicurezza
         })
       });
     }catch(e){
