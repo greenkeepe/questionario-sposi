@@ -307,7 +307,7 @@ const steps = [
   {id:'inizio_evento', section:'Dati degli sposi', type:'time', q:"A che ora è previsto l'inizio dell'evento?"},
 
   {id:'cerimonia_stessa_location', section:'Cerimonia', type:'yesno', q:'La cerimonia si svolgerà direttamente nella location del ricevimento?'},
-  {id:'cerimonia_location', section:'Cerimonia', type:'text', q:'Dove si terrà la cerimonia? 📍', ph:'Luogo cerimonia', condition:a=>a.cerimonia_stessa_location==='No'},
+  {id:'cerimonia_location', section:'Cerimonia', type:'text', q:'Dove si terrà la cerimonia? 📍', ph:'Luogo cerimonia', condition:a=>a.cerimonia_stessa_location==='Sì'},
   {id:'cerimonia_orario', section:'Cerimonia', type:'time', q:'A che ora è prevista la cerimonia? ⏰'},
   {id:'cerimonia_tipo', section:'Cerimonia', type:'choice', q:'Che tipo di cerimonia sarà?', options:['💍 Civile','❤️ Simbolica','⛪ Religiosa','Altro']},
   {id:'ingresso_sposo', section:'Cerimonia', type:'song', q:"Quale brano desiderate per l'ingresso dello sposo? 🎵\nCercatelo su YouTube e confermate la versione esatta.", ph:'Titolo - Artista', optional:true},
