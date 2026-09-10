@@ -209,8 +209,17 @@
     font-size:16px;
   }
   .song-tools{max-width:560px;margin:8px auto 0;display:flex;gap:8px;align-items:center;}
-  .youtube-btn{display:inline-flex;align-items:center;justify-content:center;background:#e62117;color:#fff;text-decoration:none;border-radius:10px;padding:10px 13px;font-size:13px;font-weight:600;white-space:nowrap;}
+  .youtube-btn{display:inline-flex;align-items:center;justify-content:center;background:#e62117;color:#fff;border:0;border-radius:10px;padding:10px 13px;font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer;}
   .youtube-btn.disabled{opacity:.45;pointer-events:none;}
+  .youtube-modal{position:fixed;inset:0;z-index:20;background:rgba(10,8,16,.88);display:flex;align-items:center;justify-content:center;padding:16px;}
+  .youtube-dialog{width:min(560px,100%);max-height:92vh;overflow:auto;background:var(--panel-2);border:1px solid #4a3e61;border-radius:18px;padding:16px;}
+  .youtube-dialog h3{margin:0 0 10px;color:var(--gold);font-family:'Fraunces',serif;font-size:20px;}
+  .youtube-search{display:flex;gap:8px;margin-bottom:10px;}
+  .youtube-search input{min-width:0;}
+  .youtube-search button,.youtube-close{border:0;border-radius:10px;background:var(--gold);color:#1a1420;padding:0 13px;font-weight:700;cursor:pointer;}
+  .youtube-frame{width:100%;height:310px;border:0;border-radius:12px;background:#111;}
+  .youtube-link{margin-top:10px;width:100%;}
+  .youtube-close{margin-top:10px;width:100%;height:42px;}
   .song-confirm{display:block;width:100%;max-width:560px;margin:10px auto 0;padding:11px;border:1px solid var(--gold);border-radius:12px;background:transparent;color:var(--gold);font-weight:600;cursor:pointer;}
   .skip-btn{
     margin-top:8px;
@@ -482,18 +491,39 @@ function renderInput(step){
     row.append(input, send);
     area.appendChild(row);
     const tools = document.createElement('div'); tools.className='song-tools';
-    const youtube = document.createElement('a'); youtube.className='youtube-btn disabled'; youtube.textContent='Cerca su YouTube'; youtube.target='_blank'; youtube.rel='noopener';
+    const youtube = document.createElement('button'); youtube.className='youtube-btn disabled'; youtube.textContent='Cerca su YouTube'; youtube.type='button';
     const updateSearch = ()=>{
       const query = input.value.trim();
-      youtube.href = query && /^https?:\/\/(www\.)?youtube\.com\/|^https?:\/\/youtu\.be\//i.test(query)
-        ? query
-        : query ? 'https://www.youtube.com/results?search_query='+encodeURIComponent(query) : '#';
+      youtube.disabled = !query;
       youtube.classList.toggle('disabled', !query);
     };
     input.addEventListener('input', updateSearch);
     updateSearch();
     tools.appendChild(youtube);
     area.appendChild(tools);
+    youtube.onclick = ()=>{
+      const modal = document.createElement('div'); modal.className='youtube-modal';
+      const dialog = document.createElement('div'); dialog.className='youtube-dialog';
+      dialog.innerHTML = '<h3>Cerca e conferma il brano</h3><div class="youtube-search"><input type="text" placeholder="Cerca titolo e artista"><button type="button">Cerca</button></div><iframe class="youtube-frame" title="Ricerca YouTube"></iframe><input class="youtube-link" type="url" placeholder="Incolla qui il link del video scelto"><button class="youtube-close" type="button">Usa questo brano</button>';
+      modal.appendChild(dialog); document.body.appendChild(modal);
+      const searchInput = dialog.querySelector('.youtube-search input');
+      const frame = dialog.querySelector('iframe');
+      const linkInput = dialog.querySelector('.youtube-link');
+      const runSearch = ()=>{
+        const q = searchInput.value.trim();
+        if(q) frame.src = 'https://www.youtube.com/results?search_query='+encodeURIComponent(q);
+      };
+      searchInput.value = input.value.trim();
+      dialog.querySelector('.youtube-search button').onclick = runSearch;
+      searchInput.addEventListener('keydown', e=>{if(e.key==='Enter') runSearch();});
+      dialog.querySelector('.youtube-close').onclick = ()=>{
+        if(linkInput.value.trim()) input.value = linkInput.value.trim();
+        modal.remove(); updateSearch(); input.focus();
+      };
+      modal.addEventListener('click', e=>{if(e.target===modal) modal.remove();});
+      runSearch();
+      linkInput.focus();
+    };
     const submit = ()=>{
       const val = input.value.trim();
       if(!val){
