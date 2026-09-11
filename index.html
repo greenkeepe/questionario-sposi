@@ -438,6 +438,7 @@ function showCustomKeyboard(input, submit, mount, mode='text'){
   if(mode !== 'numeric') addKey(actions, '@', ()=>write('@'));
   addKey(actions, 'Spazio', ()=>write(' '), 'keyboard-wide');
   addKey(actions, 'Invio', submit, 'keyboard-wide');
+  customKeyboard.appendChild(actions);
   mount.appendChild(customKeyboard);
   input.blur();
 }
