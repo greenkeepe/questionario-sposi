@@ -185,7 +185,7 @@
     border-top:1px solid #332c45;
   }
   .keyboard-row{display:grid;grid-template-columns:repeat(10,1fr);gap:5px;}
-  .keyboard-row.keyboard-actions{grid-template-columns:1fr 2fr 1fr;}
+  .keyboard-row.keyboard-actions{grid-template-columns:repeat(4,1fr);}
   .keyboard-key{
     min-height:36px;
     padding:0 4px;
@@ -395,8 +395,8 @@ function showCustomKeyboard(input, submit, mount){
   const keyRows = [
     ['1','2','3','4','5','6','7','8','9','0'],
     ['q','w','e','r','t','y','u','i','o','p'],
-    ['a','s','d','f','g','h','j','k','l','à'],
-    ['z','x','c','v','b','n','m','ò','è','ì']
+    ['a','s','d','f','g','h','j','k','l','-'],
+    ['z','x','c','v','b','n','m','/','.',':']
   ];
   keyRows.forEach(labels=>{
     const row = document.createElement('div');
@@ -410,6 +410,7 @@ function showCustomKeyboard(input, submit, mount){
     input.value = input.value.slice(0,-1);
     input.dispatchEvent(new Event('input', {bubbles:true}));
   }, 'keyboard-wide');
+  addKey(actions, '@', ()=>write('@'));
   addKey(actions, 'spazio', ()=>write(' '), 'keyboard-wide');
   addKey(actions, 'Invio', submit, 'keyboard-wide');
   mount.appendChild(customKeyboard);
@@ -852,6 +853,7 @@ async function finish(){
   email.addEventListener('keydown', e=>{ if(e.key === 'Enter') submitFinal(email.value.trim()); });
   row.append(email, send);
   area.appendChild(row);
+  setupMobileInput(email, ()=>submitFinal(email.value.trim()), area);
   focusForDesktop(email);
 }
 
