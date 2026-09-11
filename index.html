@@ -670,18 +670,22 @@ function renderInput(step){
       const query=city.value.trim().toLocaleLowerCase('it-IT');
       citySuggestions.innerHTML='';
       if(!query || selectedCity) return;
-      cities.filter(name=>name.toLocaleLowerCase('it-IT').startsWith(query)).slice(0,8).forEach(name=>{
+      const matches = cities.filter(name=>name.toLocaleLowerCase('it-IT').startsWith(query));
+      const fallback = matches.length ? matches : cities.filter(name=>name.toLocaleLowerCase('it-IT').includes(query));
+      fallback.slice(0,8).forEach(name=>{
         const option=document.createElement('button'); option.type='button'; option.className='city-suggestion';
         option.textContent=name;
         option.onclick=()=>{
           selectedCity=name; city.value=name; citySuggestions.innerHTML='';
-          input.disabled=false; maps.disabled=false;
+          input.disabled=false; send.disabled=false; maps.disabled=false;
+          input.focus({preventScroll:true});
         };
         citySuggestions.appendChild(option);
       });
     };
     city.addEventListener('input',()=>{ selectedCity=''; input.disabled=true; maps.disabled=true; renderCities(); });
     setupMobileInput(city, renderCities, cityWrap, 'text');
+    focusForDesktop(city);
     const row = document.createElement('div'); row.className='row';
     if(idx > 0){
       const back = document.createElement('button');
