@@ -731,7 +731,11 @@ function renderInput(step){
     cityWrap.append(city,citySuggestions); area.appendChild(cityWrap);
     const savedLocation = String(answers[step.id] || '');
     const savedLocationText = savedLocation.split(/\s+— Google Maps:/i)[0].trim();
-    const savedCity = answers.location_city || savedLocationText.split(',').map(part=>part.trim()).filter(Boolean).slice(-2, -1)[0] || '';
+    const savedParts = savedLocationText.split(',').map(part=>part.trim()).filter(Boolean);
+    const savedCity = answers.location_city ||
+      (savedParts.length >= 2 && /^\d{4,6}$/.test(savedParts[savedParts.length - 2])
+        ? savedParts[savedParts.length - 4] || ''
+        : savedParts[savedParts.length - 2] || '');
     let selectedCity=savedCity;
     let citySearchTimer = null;
     const showCity = name => {
