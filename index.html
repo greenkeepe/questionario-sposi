@@ -248,6 +248,9 @@
     font-size:16px;
   }
   .song-tools{max-width:560px;margin:8px auto 0;display:flex;gap:8px;align-items:center;}
+  .location-tools{max-width:560px;margin:8px auto 0;display:flex;gap:8px;align-items:center;}
+  .maps-btn{flex:1;border:0;border-radius:10px;background:#4285f4;color:#fff;padding:11px 13px;font-size:13px;font-weight:600;cursor:pointer;}
+  .location-confirm{display:block;width:100%;max-width:560px;margin:10px auto 0;padding:11px;border:1px solid var(--gold);border-radius:12px;background:transparent;color:var(--gold);font-weight:600;cursor:pointer;}
   .youtube-btn{display:inline-flex;align-items:center;justify-content:center;background:#e62117;color:#fff;border:0;border-radius:10px;padding:10px 13px;font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer;}
   .youtube-btn.disabled{opacity:.45;pointer-events:none;}
   .youtube-modal{position:fixed;inset:0;z-index:20;background:rgba(10,8,16,.88);display:flex;align-items:center;justify-content:center;padding:16px;}
@@ -472,20 +475,20 @@ if (window.visualViewport) {
 const steps = [
   {id:'nomi', section:'Dati degli sposi', type:'text', q:"Ciao! 👋 Iniziamo a raccogliere tutte le informazioni per il vostro matrimonio.\nCome vi chiamate?", ph:'es. Giulia & Marco'},
   {id:'data', section:'Dati degli sposi', type:'date', q:'Qual è la data del vostro matrimonio? 📅'},
-  {id:'location', section:'Dati degli sposi', type:'text', q:'In quale location si svolgerà il matrimonio? 📍', ph:'Nome location'},
+  {id:'location', section:'Dati degli sposi', type:'location', q:'In quale location si svolgerà il matrimonio? 📍\nCercala su Google Maps e conferma il posto esatto.', ph:'Nome location o indirizzo'},
   {id:'invitati', section:'Dati degli sposi', type:'number', q:'Quanti invitati prevedete indicativamente?', ph:'Numero invitati'},
   {id:'inizio_evento', section:'Dati degli sposi', type:'time', q:"A che ora è previsto l'inizio dell'evento?"},
 
   {id:'cerimonia_stessa_location', section:'Cerimonia', type:'yesno', q:'La cerimonia si svolgerà direttamente nella location del ricevimento?'},
   {id:'cerimonia_location', section:'Cerimonia', type:'text', q:'Dove si terrà la cerimonia? 📍', ph:'Luogo cerimonia', condition:a=>a.cerimonia_stessa_location==='Sì'},
-  {id:'cerimonia_orario', section:'Cerimonia', type:'time', q:'A che ora è prevista la cerimonia? ⏰'},
-  {id:'cerimonia_tipo', section:'Cerimonia', type:'choice', q:'Che tipo di cerimonia sarà?', options:['💍 Civile','❤️ Simbolica','⛪ Religiosa','Altro']},
-  {id:'ingresso_sposo', section:'Cerimonia', type:'song', q:"Quale brano desiderate per l'ingresso dello sposo? 🎵\nCercatelo su YouTube e confermate la versione esatta. Se volete, incollate il link del video scelto.", ph:'Titolo - Artista o link YouTube', optional:true},
-  {id:'ingresso_sposa', section:'Cerimonia', type:'song', q:"Quale brano desiderate per l'ingresso della sposa? 👰🎵\nCercatelo su YouTube e confermate la versione esatta. Se volete, incollate il link del video scelto.", ph:'Titolo - Artista o link YouTube', optional:true},
-  {id:'scambio_fedi', section:'Cerimonia', type:'song', q:'Desiderate un brano durante lo scambio delle fedi? 💍\nCercatelo su YouTube e confermate la versione esatta. Se volete, incollate il link del video scelto.', ph:'Titolo - Artista o link YouTube', optional:true},
-  {id:'firme_musica', section:'Cerimonia', type:'song', q:'È previsto un momento musicale durante le firme? Se sì, cercate il brano su YouTube e confermate la versione esatta.', ph:'Titolo - Artista o link YouTube', optional:true},
-  {id:'uscita_cerimonia', section:'Cerimonia', type:'song', q:'Quale brano desiderate per l\'uscita degli sposi dalla cerimonia? 🎉\nCercatelo su YouTube e confermate la versione esatta. Se volete, incollate il link del video scelto.', ph:'Titolo - Artista o link YouTube', optional:true},
-  {id:'cerimonia_altro', section:'Cerimonia', type:'text', q:'Ci sono altri momenti della cerimonia che desiderate accompagnare con una musica particolare?', ph:'Racconta pure', optional:true},
+  {id:'cerimonia_orario', section:'Cerimonia', type:'time', q:'A che ora è prevista la cerimonia? ⏰', condition:a=>a.cerimonia_stessa_location==='Sì'},
+  {id:'cerimonia_tipo', section:'Cerimonia', type:'choice', q:'Che tipo di cerimonia sarà?', options:['💍 Civile','❤️ Simbolica','⛪ Religiosa','Altro'], condition:a=>a.cerimonia_stessa_location==='Sì'},
+  {id:'ingresso_sposo', section:'Cerimonia', type:'song', q:"Quale brano desiderate per l'ingresso dello sposo? 🎵\nCercatelo su YouTube e confermate la versione esatta. Se volete, incollate il link del video scelto.", ph:'Titolo - Artista o link YouTube', optional:true, condition:a=>a.cerimonia_stessa_location==='Sì'},
+  {id:'ingresso_sposa', section:'Cerimonia', type:'song', q:"Quale brano desiderate per l'ingresso della sposa? 👰🎵\nCercatelo su YouTube e confermate la versione esatta. Se volete, incollate il link del video scelto.", ph:'Titolo - Artista o link YouTube', optional:true, condition:a=>a.cerimonia_stessa_location==='Sì'},
+  {id:'scambio_fedi', section:'Cerimonia', type:'song', q:'Desiderate un brano durante lo scambio delle fedi? 💍\nCercatelo su YouTube e confermate la versione esatta. Se volete, incollate il link del video scelto.', ph:'Titolo - Artista o link YouTube', optional:true, condition:a=>a.cerimonia_stessa_location==='Sì'},
+  {id:'firme_musica', section:'Cerimonia', type:'song', q:'È previsto un momento musicale durante le firme? Se sì, cercate il brano su YouTube e confermate la versione esatta.', ph:'Titolo - Artista o link YouTube', optional:true, condition:a=>a.cerimonia_stessa_location==='Sì'},
+  {id:'uscita_cerimonia', section:'Cerimonia', type:'song', q:'Quale brano desiderate per l\'uscita degli sposi dalla cerimonia? 🎉\nCercatelo su YouTube e confermate la versione esatta. Se volete, incollate il link del video scelto.', ph:'Titolo - Artista o link YouTube', optional:true, condition:a=>a.cerimonia_stessa_location==='Sì'},
+  {id:'cerimonia_altro', section:'Cerimonia', type:'text', q:'Ci sono altri momenti della cerimonia che desiderate accompagnare con una musica particolare?', ph:'Racconta pure', optional:true, condition:a=>a.cerimonia_stessa_location==='Sì'},
 
   {id:'arrivo_invitati', section:'Ricevimento', type:'time', q:'A che ora è previsto l\'arrivo degli invitati al ricevimento?'},
   {id:'aperitivo', section:'Ricevimento', type:'yesno', q:'È previsto un aperitivo?'},
@@ -632,6 +635,44 @@ function renderInput(step){
     };
     area.appendChild(confirm);
 
+  } else if(step.type === 'location'){
+    const row = document.createElement('div'); row.className='row';
+    if(idx > 0){
+      const back = document.createElement('button');
+      back.className='back-btn'; back.textContent='←'; back.type='button';
+      back.setAttribute('aria-label','Torna alla domanda precedente'); back.onclick=goBack;
+      row.appendChild(back);
+    }
+    const input = document.createElement('input');
+    input.type='text'; input.placeholder=step.ph; input.value=answers[step.id] || '';
+    const send = document.createElement('button');
+    send.className='send-btn'; send.type='button'; send.textContent='✓';
+    row.append(input, send); area.appendChild(row);
+    const tools = document.createElement('div'); tools.className='location-tools';
+    const maps = document.createElement('button'); maps.className='maps-btn'; maps.type='button'; maps.textContent='Cerca e conferma su Google Maps';
+    tools.appendChild(maps); area.appendChild(tools);
+    let mapsUrl = '';
+    const submit = ()=>{
+      const val=input.value.trim();
+      if(!val) return;
+      advance(step, val+' — Google Maps: '+(mapsUrl || 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(val)), val+' — Google Maps: '+(mapsUrl || 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(val)));
+    };
+    const openMaps = ()=>{
+      const query=input.value.trim();
+      if(!query) return;
+      mapsUrl='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(query);
+      const modal=document.createElement('div'); modal.className='youtube-modal';
+      const dialog=document.createElement('div'); dialog.className='youtube-dialog';
+      dialog.innerHTML='<h3>Conferma la location</h3><p style="color:var(--text-dim);font-size:13px;line-height:1.5">Apri Google Maps, controlla il risultato e torna qui per confermare il posto esatto.</p><a class="maps-btn" style="display:block;text-align:center;text-decoration:none" target="_blank" rel="noopener" href="'+mapsUrl+'">Apri Google Maps</a><button class="location-confirm" type="button">Confermo questa location</button><button class="youtube-close" type="button">Modifica ricerca</button>';
+      modal.appendChild(dialog); document.body.appendChild(modal);
+      dialog.querySelector('.location-confirm').onclick=()=>{ modal.remove(); submit(); };
+      dialog.querySelector('.youtube-close').onclick=()=>modal.remove();
+      modal.addEventListener('click',e=>{if(e.target===modal) modal.remove();});
+    };
+    maps.onclick=openMaps; send.onclick=submit;
+    input.addEventListener('keydown',e=>{if(e.key==='Enter') openMaps();});
+    setupMobileInput(input, openMaps, area, 'text');
+    focusForDesktop(input);
   } else if(step.type === 'song'){
     const row = document.createElement('div'); row.className='row';
     if(idx > 0){
