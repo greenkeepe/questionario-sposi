@@ -125,20 +125,22 @@
     gap:10px;
   }
   .msg{
-    max-width:82%;
-    padding:12px 15px;
+    max-width:92%;
+    padding:17px 19px;
     border-radius:var(--radius);
-    font-size:14.5px;
-    line-height:1.5;
+    font-size:17px;
+    line-height:1.55;
     animation:rise .25s ease;
     white-space:pre-wrap;
   }
   @keyframes rise{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
   .msg.bot{
-    background:var(--panel);
+    background:linear-gradient(145deg,#29233d,#211c30);
     align-self:flex-start;
     border-bottom-left-radius:4px;
     color:var(--text);
+    box-shadow:0 10px 28px rgba(0,0,0,.22);
+    border:1px solid #3a3350;
   }
   .msg.user{
     background:var(--gold);
@@ -178,7 +180,7 @@
   }
   .custom-keyboard{
     display:grid;
-    gap:6px;
+    gap:8px;
     margin:10px auto 0;
     max-width:560px;
     padding-top:8px;
@@ -188,28 +190,28 @@
     width:min(300px,100%);
     gap:8px;
   }
-  .keyboard-row{display:grid;grid-template-columns:repeat(10,1fr);gap:5px;}
-  .custom-keyboard.numeric .keyboard-row{grid-template-columns:repeat(3,1fr);gap:8px;}
-  .keyboard-row.keyboard-actions{grid-template-columns:repeat(3,1fr);width:100%;margin:0 auto;}
+  .keyboard-row{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;}
+  .custom-keyboard.numeric .keyboard-row{grid-template-columns:repeat(3,1fr);gap:9px;}
+  .keyboard-row.keyboard-actions{grid-template-columns:repeat(4,1fr);width:100%;margin:0 auto;}
   .keyboard-key{
-    min-height:36px;
+    min-height:46px;
     padding:0 4px;
     border:1px solid #3a3350;
     border-radius:8px;
     background:#302944;
     color:var(--text);
-    font:600 14px 'Inter',sans-serif;
+    font:600 17px 'Inter',sans-serif;
     touch-action:manipulation;
   }
   .keyboard-key:active{background:var(--gold);color:#1a1420;}
   .keyboard-actions .keyboard-space{grid-column:auto;}
   .custom-keyboard.numeric .keyboard-key{
-    min-height:52px;
-    font-size:20px;
+    min-height:64px;
+    font-size:24px;
   }
   .custom-keyboard.numeric .keyboard-row.keyboard-actions{grid-template-columns:repeat(3,1fr);width:100%;margin:0 auto;}
   .keyboard-placeholder{visibility:hidden;pointer-events:none;}
-  .keyboard-key.keyboard-wide{font-size:12px;}
+  .keyboard-key.keyboard-wide{font-size:14px;}
   .choices{display:flex; flex-wrap:wrap; justify-content:center; gap:8px; max-width:560px; margin:0 auto;}
   .chip{
     background:var(--panel);
@@ -308,9 +310,10 @@
   .email-card p{margin:0;color:var(--text-dim);font-size:13px;line-height:1.5;}
 
   /* ---------- DONE ---------- */
-  #doneScreen{display:none; flex:1; flex-direction:column; align-items:center; justify-content:center; padding:40px 28px; text-align:center;}
-  #doneScreen h2{font-family:'Fraunces',serif; font-weight:500; font-size:26px; margin:0 0 10px;}
-  #doneScreen p{color:var(--text-dim); font-size:14px; margin:0 0 26px;}
+  #doneScreen{display:none; position:absolute; inset:0; z-index:20; align-items:center; justify-content:center; padding:24px; text-align:center; background:rgba(12,10,18,.82); backdrop-filter:blur(8px);}
+  .done-card{width:min(100%,390px); padding:30px 24px; border:1px solid var(--gold); border-radius:24px; background:linear-gradient(145deg,#2b2440,#1d192a); box-shadow:0 20px 60px rgba(0,0,0,.45);}
+  #doneScreen h2{font-family:'Fraunces',serif; font-weight:500; font-size:30px; margin:0 0 12px;}
+  #doneScreen p{color:var(--text-dim); font-size:15px; line-height:1.55; margin:0 0 26px;}
   .copy-btn{
     background:var(--panel);
     border:1px solid var(--gold);
@@ -332,9 +335,9 @@
     .custom-keyboard{gap:5px;margin-top:8px;padding-top:6px;}
     .custom-keyboard.numeric{gap:7px;}
     .keyboard-row{gap:4px;}
-    .keyboard-key{min-height:34px;font-size:13px;}
+    .keyboard-key{min-height:44px;font-size:16px;}
     .custom-keyboard.numeric .keyboard-row{gap:7px;}
-    .custom-keyboard.numeric .keyboard-key{min-height:54px;font-size:21px;}
+    .custom-keyboard.numeric .keyboard-key{min-height:62px;font-size:24px;}
     .row{gap:6px;}
     .back-btn{padding:0 12px;}
     .youtube-modal{align-items:flex-end;padding:8px;}
@@ -376,10 +379,12 @@
 
   <!-- DONE -->
   <div id="doneScreen">
-    <h2>Grazie mille! 🎉</h2>
-    <p>Le vostre risposte sono state inviate al vostro DJ.<br>Vi ricontatteremo per qualsiasi dettaglio.</p>
-    <button class="copy-btn" onclick="copySummary()">Copia il riepilogo</button>
-    <div id="saveStatus"></div>
+    <div class="done-card">
+      <h2>Grazie mille! 🎉</h2>
+      <p>Le vostre risposte sono state inviate correttamente.<br>Abbiamo inviato il riepilogo sia a voi sia al nostro team.</p>
+      <button class="copy-btn" onclick="copySummary()">Copia il riepilogo</button>
+      <div id="saveStatus"></div>
+    </div>
   </div>
 
 </div>
@@ -425,7 +430,7 @@ function showCustomKeyboard(input, submit, mount, mode='text'){
       ['1','2','3','4','5','6','7','8','9','0'],
       ['q','w','e','r','t','y','u','i','o','p'],
       ['a','s','d','f','g','h','j','k','l','-'],
-      ['z','x','c','v','b','n','m','/','.',':','@']
+      ['z','x','c','v','b','n','m','/', '.', ':']
     ];
   keyRows.forEach(labels=>{
     const row = document.createElement('div');
@@ -446,6 +451,7 @@ function showCustomKeyboard(input, submit, mount, mode='text'){
     placeholder.className = 'keyboard-key keyboard-placeholder';
     actions.appendChild(placeholder);
   } else {
+    addKey(actions, '@', ()=>write('@'));
     const placeholder = document.createElement('span');
     placeholder.className = 'keyboard-key keyboard-placeholder';
     actions.appendChild(placeholder);
