@@ -209,7 +209,8 @@
   }
   .custom-keyboard.numeric .keyboard-row.keyboard-actions{
     grid-template-columns:repeat(2,1fr);
-    order:-1;
+    width:68%;
+    margin:0 auto;
   }
   .keyboard-key.keyboard-wide{font-size:12px;}
   .choices{display:flex; flex-wrap:wrap; justify-content:center; gap:8px; max-width:560px; margin:0 auto;}
@@ -252,6 +253,10 @@
   .song-tools{max-width:560px;margin:8px auto 0;display:flex;gap:8px;align-items:center;}
   .location-tools{max-width:560px;margin:8px auto 0;display:flex;gap:8px;align-items:center;}
   .location-city{width:100%;margin-bottom:8px;}
+  .location-city-wrap{max-width:560px;margin:0 auto 8px;position:relative;}
+  .city-suggestions{display:grid;gap:5px;max-height:26dvh;overflow:auto;margin-top:6px;}
+  .city-suggestion{padding:9px 12px;border:1px solid #3a3350;border-radius:10px;background:var(--panel);color:var(--text);text-align:left;cursor:pointer;}
+  .city-suggestion:hover,.city-suggestion.selected{border-color:var(--gold);color:var(--gold);}
   .maps-btn{flex:1;border:0;border-radius:10px;background:#4285f4;color:#fff;padding:11px 13px;font-size:13px;font-weight:600;cursor:pointer;}
   .location-results{display:grid;gap:8px;max-height:42dvh;overflow:auto;margin:12px 0;}
   .location-result{display:block;width:100%;padding:11px;border:1px solid #3a3350;border-radius:12px;background:var(--panel);color:var(--text);text-align:left;cursor:pointer;}
@@ -524,7 +529,7 @@ const steps = [
   {id:'mood', section:'Mood della festa', type:'multi', q:'Che tipo di festa desiderate? Potete scegliere più opzioni:', options:['🔥 Super movimentata','🕺 Tantissimo ballo','🎉 Festa equilibrata','🥂 Elegante e raffinata','🇮🇹 Musica italiana','🌎 Musica internazionale','🪩 Revival','🎧 Dance / House','💃 Commerciale / Pop','🎸 Rock','🎤 Karaoke','🎶 Un po\' di tutto']},
   {id:'tre_parole', section:'Mood della festa', type:'text', q:'Se doveste descrivere la festa dei vostri sogni in 3 parole, quali usereste?', ph:'es. Energia, eleganza, follia'},
 
-  {id:'generi_preferiti', section:'Gusti musicali', type:'text', q:'Quali sono i vostri generi musicali preferiti?', ph:'es. Pop, dance, anni 90'},
+  {id:'generi_preferiti', section:'Gusti musicali', type:'multi', q:'Quali generi musicali preferite? Potete selezionare più opzioni:', options:['Pop','Dance / House','Commerciale','Rock','R&B / Soul','Hip hop / Rap','Musica italiana','Anni 70 / 80','Anni 90 / 2000','Latino','Jazz / Swing','Classica','Folk / Country','Karaoke','Nessuna preferenza']},
   {id:'artisti_preferiti', section:'Gusti musicali', type:'text', q:'Quali sono gli artisti o gruppi che amate particolarmente?', ph:'Elenca pure', optional:true},
   {id:'canzoni_coppia', section:'Gusti musicali', type:'text', q:'Quali sono 3-5 canzoni che rappresentano voi come coppia? ❤️', ph:'Elenco canzoni', optional:true},
   {id:'canzoni_must', section:'Gusti musicali', type:'text', q:'Ci sono canzoni che volete assolutamente ascoltare durante la festa? 🔥', ph:'Elenco canzoni', optional:true},
@@ -632,9 +637,10 @@ function renderInput(step){
 
   } else if(step.type === 'multi'){
     const wrap = document.createElement('div'); wrap.className='choices';
-    const selected = new Set();
+    const selected = new Set((answers[step.id] || '').split(',').map(value=>value.trim()).filter(Boolean));
     step.options.forEach(opt=>{
       const b = document.createElement('button'); b.className='chip'; b.textContent=opt;
+      if(selected.has(opt)) b.classList.add('selected');
       b.onclick=()=>{ b.classList.toggle('selected'); selected.has(opt)?selected.delete(opt):selected.add(opt); };
       wrap.appendChild(b);
     });
@@ -648,16 +654,34 @@ function renderInput(step){
     area.appendChild(confirm);
 
   } else if(step.type === 'location'){
-    const city = document.createElement('select');
-    city.className='location-city';
-    city.setAttribute('aria-label','Città della location');
-    city.innerHTML='<option value="">Seleziona prima la città</option>'+[
+    const cities = [
       'Roma','Milano','Napoli','Torino','Palermo','Genova','Bologna','Firenze','Bari','Venezia',
       'Verona','Messina','Padova','Trieste','Taranto','Brescia','Parma','Prato','Modena','Reggio Emilia',
       'Perugia','Ravenna','Livorno','Cagliari','Foggia','Rimini','Salerno','Ferrara','Sassari','Monza',
       'Bergamo','Pescara','Trento','Forlì','Siracusa','Vicenza','Terni','Bolzano','Novara','Piacenza'
-    ].map(name=>`<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');
-    area.appendChild(city);
+    ];
+    const cityWrap=document.createElement('div'); cityWrap.className='location-city-wrap';
+    const city=document.createElement('input'); city.type='text'; city.className='location-city';
+    city.placeholder='Scrivi prima la città'; city.setAttribute('aria-label','Città della location');
+    const citySuggestions=document.createElement('div'); citySuggestions.className='city-suggestions';
+    cityWrap.append(city,citySuggestions); area.appendChild(cityWrap);
+    let selectedCity='';
+    const renderCities=()=>{
+      const query=city.value.trim().toLocaleLowerCase('it-IT');
+      citySuggestions.innerHTML='';
+      if(!query || selectedCity) return;
+      cities.filter(name=>name.toLocaleLowerCase('it-IT').startsWith(query)).slice(0,8).forEach(name=>{
+        const option=document.createElement('button'); option.type='button'; option.className='city-suggestion';
+        option.textContent=name;
+        option.onclick=()=>{
+          selectedCity=name; city.value=name; citySuggestions.innerHTML='';
+          input.disabled=false; maps.disabled=false;
+        };
+        citySuggestions.appendChild(option);
+      });
+    };
+    city.addEventListener('input',()=>{ selectedCity=''; input.disabled=true; maps.disabled=true; renderCities(); });
+    setupMobileInput(city, renderCities, cityWrap, 'text');
     const row = document.createElement('div'); row.className='row';
     if(idx > 0){
       const back = document.createElement('button');
@@ -666,25 +690,25 @@ function renderInput(step){
       row.appendChild(back);
     }
     const input = document.createElement('input');
-    input.type='text'; input.placeholder=step.ph; input.value=answers[step.id] || '';
+    input.type='text'; input.placeholder=step.ph; input.value=answers[step.id] || ''; input.disabled=true;
     const send = document.createElement('button');
-    send.className='send-btn'; send.type='button'; send.textContent='✓';
+    send.className='send-btn'; send.type='button'; send.textContent='✓'; send.disabled=true;
     row.append(input, send); area.appendChild(row);
     const tools = document.createElement('div'); tools.className='location-tools';
-    const maps = document.createElement('button'); maps.className='maps-btn'; maps.type='button'; maps.textContent='Cerca location';
+    const maps = document.createElement('button'); maps.className='maps-btn'; maps.type='button'; maps.textContent='Cerca location'; maps.disabled=true;
     tools.appendChild(maps); area.appendChild(tools);
     let selectedLocation = null;
     const submit = ()=>{
       const val=input.value.trim();
-      if(!city.value || !val || !selectedLocation) return;
+      if(!selectedCity || !val || !selectedLocation) return;
       if(!selectedLocation) return;
       const mapsUrl='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(selectedLocation.display_name);
       advance(step, selectedLocation.display_name+' — Google Maps: '+mapsUrl, selectedLocation.display_name+' — Google Maps: '+mapsUrl);
     };
     const openMaps = async ()=>{
       const query=input.value.trim();
-      if(!city.value || !query) return;
-      const fullQuery=query+', '+city.value+', Italia';
+      if(!selectedCity || !query) return;
+      const fullQuery=query+', '+selectedCity+', Italia';
       const modal=document.createElement('div'); modal.className='youtube-modal';
       const dialog=document.createElement('div'); dialog.className='youtube-dialog';
       dialog.innerHTML='<h3>Seleziona la location esatta</h3><div class="location-results" aria-live="polite"><div class="youtube-loading">Ricerca in corso...</div></div><button class="location-confirm" type="button" disabled>Conferma location selezionata</button><button class="youtube-close" type="button">Modifica ricerca</button>';
@@ -1043,6 +1067,7 @@ async function submitFinal(customerEmail){
         answers.orari_montaggio || '',
         answers.limitazioni || '',
         answers.ultima || '',
+        answers.nota || '',
         customerEmail,
         lastSummary
       ];
