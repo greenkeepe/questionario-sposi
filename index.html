@@ -372,7 +372,7 @@ function closeCustomKeyboard(){
   customKeyboard = null;
   customKeyboardInput = null;
 }
-function showCustomKeyboard(input, submit, mount){
+function showCustomKeyboard(input, submit, mount, mode='text'){
   if(!isTouchDevice()) return;
   if(customKeyboardInput === input && customKeyboard) return;
   closeCustomKeyboard();
@@ -392,12 +392,14 @@ function showCustomKeyboard(input, submit, mount){
     input.value += value;
     input.dispatchEvent(new Event('input', {bubbles:true}));
   };
-  const keyRows = [
-    ['1','2','3','4','5','6','7','8','9','0'],
-    ['q','w','e','r','t','y','u','i','o','p'],
-    ['a','s','d','f','g','h','j','k','l','-'],
-    ['z','x','c','v','b','n','m','/','.',':']
-  ];
+  const keyRows = mode === 'numeric'
+    ? [['1','2','3'],['4','5','6'],['7','8','9'],['0','.',':']]
+    : [
+      ['1','2','3','4','5','6','7','8','9','0'],
+      ['q','w','e','r','t','y','u','i','o','p'],
+      ['a','s','d','f','g','h','j','k','l','-'],
+      ['z','x','c','v','b','n','m','/','.',':']
+    ];
   keyRows.forEach(labels=>{
     const row = document.createElement('div');
     row.className = 'keyboard-row';
@@ -416,18 +418,29 @@ function showCustomKeyboard(input, submit, mount){
   mount.appendChild(customKeyboard);
   input.blur();
 }
-function setupMobileInput(input, submit, mount){
+function setupMobileInput(input, submit, mount, kind='text'){
   if(!isTouchDevice()) return;
+  if(kind === 'date'){
+    input.readOnly = false;
+    input.setAttribute('inputmode','none');
+    const openCalendar = event => {
+      event.preventDefault();
+      if(typeof input.showPicker === 'function') input.showPicker();
+    };
+    input.addEventListener('pointerdown', openCalendar);
+    input.addEventListener('click', openCalendar);
+    return;
+  }
   input.type = 'text';
   input.readOnly = true;
   input.setAttribute('inputmode','none');
   const open = event => {
     event.preventDefault();
-    showCustomKeyboard(input, submit, mount);
+    showCustomKeyboard(input, submit, mount, kind === 'number' || kind === 'time' ? 'numeric' : 'text');
   };
   input.addEventListener('pointerdown', open);
   input.addEventListener('click', open);
-  showCustomKeyboard(input, submit, mount);
+  showCustomKeyboard(input, submit, mount, kind === 'number' || kind === 'time' ? 'numeric' : 'text');
 }
 const focusForDesktop = element => {
   if (!isTouchDevice()) setTimeout(() => element.focus({preventScroll:true}), 50);
@@ -705,7 +718,7 @@ function renderInput(step){
       skip.onclick=()=>advance(step, '—', 'Non specificato');
       area.appendChild(skip);
     }
-    setupMobileInput(input, submit, area);
+    setupMobileInput(input, submit, area, step.type);
     focusForDesktop(input);
   } else {
     const row = document.createElement('div'); row.className='row';
@@ -743,7 +756,7 @@ function renderInput(step){
       skip.onclick=()=>advance(step, '—', 'Non specificato');
       area.appendChild(skip);
     }
-    setupMobileInput(input, submit, area);
+    setupMobileInput(input, submit, area, step.type);
     focusForDesktop(input);
   }
 }
