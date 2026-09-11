@@ -207,7 +207,7 @@
     font-size:20px;
   }
   .custom-keyboard.numeric .keyboard-row.keyboard-actions{
-    grid-template-columns:repeat(4,1fr);
+    grid-template-columns:repeat(3,1fr);
   }
   .keyboard-key.keyboard-wide{font-size:12px;}
   .choices{display:flex; flex-wrap:wrap; justify-content:center; gap:8px; max-width:560px; margin:0 auto;}
@@ -250,6 +250,10 @@
   .song-tools{max-width:560px;margin:8px auto 0;display:flex;gap:8px;align-items:center;}
   .location-tools{max-width:560px;margin:8px auto 0;display:flex;gap:8px;align-items:center;}
   .maps-btn{flex:1;border:0;border-radius:10px;background:#4285f4;color:#fff;padding:11px 13px;font-size:13px;font-weight:600;cursor:pointer;}
+  .location-results{display:grid;gap:8px;max-height:42dvh;overflow:auto;margin:12px 0;}
+  .location-result{display:block;width:100%;padding:11px;border:1px solid #3a3350;border-radius:12px;background:var(--panel);color:var(--text);text-align:left;cursor:pointer;}
+  .location-result strong{display:block;font-size:13px;line-height:1.35;}
+  .location-result span{display:block;margin-top:4px;color:var(--text-dim);font-size:11px;line-height:1.35;}
   .location-confirm{display:block;width:100%;max-width:560px;margin:10px auto 0;padding:11px;border:1px solid var(--gold);border-radius:12px;background:transparent;color:var(--gold);font-weight:600;cursor:pointer;}
   .youtube-btn{display:inline-flex;align-items:center;justify-content:center;background:#e62117;color:#fff;border:0;border-radius:10px;padding:10px 13px;font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer;}
   .youtube-btn.disabled{opacity:.45;pointer-events:none;}
@@ -430,7 +434,7 @@ function showCustomKeyboard(input, submit, mount, mode='text'){
     input.value = input.value.slice(0,-1);
     input.dispatchEvent(new Event('input', {bubbles:true}));
   }, 'keyboard-wide');
-  addKey(actions, '@', ()=>write('@'));
+  if(mode !== 'numeric') addKey(actions, '@', ()=>write('@'));
   addKey(actions, 'spazio', ()=>write(' '), 'keyboard-wide');
   addKey(actions, 'Invio', submit, 'keyboard-wide');
   mount.appendChild(customKeyboard);
@@ -649,23 +653,52 @@ function renderInput(step){
     send.className='send-btn'; send.type='button'; send.textContent='✓';
     row.append(input, send); area.appendChild(row);
     const tools = document.createElement('div'); tools.className='location-tools';
-    const maps = document.createElement('button'); maps.className='maps-btn'; maps.type='button'; maps.textContent='Cerca e conferma su Google Maps';
+    const maps = document.createElement('button'); maps.className='maps-btn'; maps.type='button'; maps.textContent='Cerca location';
     tools.appendChild(maps); area.appendChild(tools);
-    let mapsUrl = '';
+    let selectedLocation = null;
     const submit = ()=>{
       const val=input.value.trim();
       if(!val) return;
-      advance(step, val+' — Google Maps: '+(mapsUrl || 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(val)), val+' — Google Maps: '+(mapsUrl || 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(val)));
+      if(!selectedLocation) return;
+      const mapsUrl='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(selectedLocation.display_name);
+      advance(step, selectedLocation.display_name+' — Google Maps: '+mapsUrl, selectedLocation.display_name+' — Google Maps: '+mapsUrl);
     };
-    const openMaps = ()=>{
+    const openMaps = async ()=>{
       const query=input.value.trim();
       if(!query) return;
-      mapsUrl='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(query);
       const modal=document.createElement('div'); modal.className='youtube-modal';
       const dialog=document.createElement('div'); dialog.className='youtube-dialog';
-      dialog.innerHTML='<h3>Conferma la location</h3><p style="color:var(--text-dim);font-size:13px;line-height:1.5">Apri Google Maps, controlla il risultato e torna qui per confermare il posto esatto.</p><a class="maps-btn" style="display:block;text-align:center;text-decoration:none" target="_blank" rel="noopener" href="'+mapsUrl+'">Apri Google Maps</a><button class="location-confirm" type="button">Confermo questa location</button><button class="youtube-close" type="button">Modifica ricerca</button>';
+      dialog.innerHTML='<h3>Seleziona la location esatta</h3><div class="location-results" aria-live="polite"><div class="youtube-loading">Ricerca in corso...</div></div><button class="location-confirm" type="button" disabled>Conferma location selezionata</button><button class="youtube-close" type="button">Modifica ricerca</button>';
       modal.appendChild(dialog); document.body.appendChild(modal);
-      dialog.querySelector('.location-confirm').onclick=()=>{ modal.remove(); submit(); };
+      const results=dialog.querySelector('.location-results');
+      const confirm=dialog.querySelector('.location-confirm');
+      try{
+        const response=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6&accept-language=it&q='+encodeURIComponent(query),{headers:{Accept:'application/json'}});
+        if(!response.ok) throw new Error('HTTP '+response.status);
+        const places=await response.json();
+        results.innerHTML='';
+        if(!places.length){
+          results.innerHTML='<div class="youtube-error">Nessun risultato trovato. Prova con nome e città.</div>';
+        }
+        places.forEach(place=>{
+          const button=document.createElement('button');
+          button.type='button'; button.className='location-result';
+          const name=(place.name || place.display_name.split(',')[0]).trim();
+          button.innerHTML='<strong>'+escapeHtml(name)+'</strong><span>'+escapeHtml(place.display_name)+'</span>';
+          button.onclick=()=>{
+            selectedLocation=place;
+            input.value=place.display_name;
+            results.querySelectorAll('.location-result').forEach(item=>item.style.borderColor='#3a3350');
+            button.style.borderColor='var(--gold)';
+            confirm.disabled=false;
+          };
+          results.appendChild(button);
+        });
+      }catch(error){
+        results.innerHTML='<div class="youtube-error">Ricerca location non disponibile. Riprova tra poco.</div>';
+        console.error('Location search failed',error);
+      }
+      confirm.onclick=()=>{ if(selectedLocation){ modal.remove(); submit(); } };
       dialog.querySelector('.youtube-close').onclick=()=>modal.remove();
       modal.addEventListener('click',e=>{if(e.target===modal) modal.remove();});
     };
