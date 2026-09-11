@@ -35,7 +35,8 @@
   #app{
     width:100%;
     max-width:480px;
-    min-height:100vh;
+    height:var(--visual-height, 100dvh);
+    min-height:100%;
     display:flex;
     flex-direction:column;
     background:linear-gradient(180deg,#181420 0%, #14121c 40%);
@@ -96,7 +97,7 @@
   }
 
   /* ---------- CHAT ---------- */
-  #chatScreen{display:none; flex:1; flex-direction:column; height:100dvh; min-height:0; overflow:hidden;}
+  #chatScreen{display:none; flex:1; flex-direction:column; height:var(--visual-height, 100dvh); min-height:0; overflow:hidden;}
   #chatHeader{
     padding:16px 20px;
     display:flex;
@@ -340,7 +341,12 @@ const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({
 }[char]));
 const isTouchDevice = () => window.matchMedia('(pointer: coarse)').matches;
 const focusForDesktop = element => {
-  if (!isTouchDevice()) setTimeout(() => element.focus(), 50);
+  setTimeout(() => {
+    element.focus({preventScroll:true});
+    if (isTouchDevice() && document.activeElement !== element) {
+      element.click();
+    }
+  }, 80);
 };
 if (window.visualViewport) {
   const updateViewport = () => {
