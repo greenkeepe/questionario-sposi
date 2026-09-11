@@ -397,6 +397,12 @@ const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyE21-LSOXnTK
 const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({
   '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
 }[char]));
+const cleanEmailText = value => String(value)
+  .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\uFE0F]/gu, '')
+  .replace(/\uFFFD/g, '')
+  .replace(/[ \t]+\n/g, '\n')
+  .replace(/\n{3,}/g, '\n\n')
+  .trim();
 const isTouchDevice = () => window.matchMedia('(pointer: coarse)').matches;
 let customKeyboard = null;
 let customKeyboardInput = null;
@@ -1138,6 +1144,7 @@ async function submitFinal(customerEmail){
   }
   const status = document.getElementById('saveStatus');
   status.textContent = 'Invio in corso...';
+  const emailSummary = cleanEmailText(lastSummary);
   if(GOOGLE_SCRIPT_URL && !GOOGLE_SCRIPT_URL.includes('INCOLLA_QUI')){
     try{
       const rowData = [
@@ -1198,7 +1205,7 @@ async function submitFinal(customerEmail){
         answers.ultima || '',
         answers.nota || '',
         customerEmail,
-        lastSummary,
+        emailSummary,
         editToken,
         JSON.stringify(answers)
       ];
@@ -1209,7 +1216,7 @@ async function submitFinal(customerEmail){
         headers:{'Content-Type':'text/plain'},
         body: JSON.stringify({
           row: rowData,
-          summary: lastSummary,
+          summary: emailSummary,
           customerEmail,
           editToken,
           answers
