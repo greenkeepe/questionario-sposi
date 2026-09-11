@@ -208,6 +208,7 @@
   }
   .custom-keyboard.numeric .keyboard-row.keyboard-actions{
     grid-template-columns:repeat(3,1fr);
+    order:-1;
   }
   .keyboard-key.keyboard-wide{font-size:12px;}
   .choices{display:flex; flex-wrap:wrap; justify-content:center; gap:8px; max-width:560px; margin:0 auto;}
@@ -430,12 +431,12 @@ function showCustomKeyboard(input, submit, mount, mode='text'){
   });
   const actions = document.createElement('div');
   actions.className = 'keyboard-row keyboard-actions';
-  addKey(actions, '⌫', ()=>{
+  addKey(actions, '⌫ Cancella', ()=>{
     input.value = input.value.slice(0,-1);
     input.dispatchEvent(new Event('input', {bubbles:true}));
   }, 'keyboard-wide');
   if(mode !== 'numeric') addKey(actions, '@', ()=>write('@'));
-  addKey(actions, 'spazio', ()=>write(' '), 'keyboard-wide');
+  addKey(actions, 'Spazio', ()=>write(' '), 'keyboard-wide');
   addKey(actions, 'Invio', submit, 'keyboard-wide');
   mount.appendChild(customKeyboard);
   input.blur();
