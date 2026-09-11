@@ -21,7 +21,7 @@
     --radius:18px;
   }
   *{box-sizing:border-box;}
-  html,body{height:100%;}
+  html,body{height:100%; overflow:hidden;}
   body{
     margin:0;
     background:var(--ink);
@@ -29,7 +29,8 @@
     font-family:'Inter',sans-serif;
     display:flex;
     justify-content:center;
-    min-height:100vh;
+    height:100dvh;
+    min-height:100%;
   }
   #app{
     width:100%;
@@ -95,14 +96,14 @@
   }
 
   /* ---------- CHAT ---------- */
-  #chatScreen{display:none; flex:1; flex-direction:column; min-height:100vh;}
+  #chatScreen{display:none; flex:1; flex-direction:column; height:100dvh; min-height:0; overflow:hidden;}
   #chatHeader{
     padding:16px 20px;
     display:flex;
     align-items:center;
     gap:12px;
     border-bottom:1px solid #2a2438;
-    position:sticky; top:0;
+    flex:0 0 auto;
     background:rgba(20,18,28,.92);
     backdrop-filter:blur(6px);
     z-index:5;
@@ -115,6 +116,7 @@
 
   #messages{
     flex:1;
+    min-height:0;
     overflow-y:auto;
     padding:20px 16px 12px;
     display:flex;
@@ -167,6 +169,8 @@
   }
 
   #inputArea{
+    flex:0 0 auto;
+    min-height:0;
     padding:12px 16px 22px;
     border-top:1px solid #2a2438;
     background:rgba(20,18,28,.98);
@@ -212,12 +216,19 @@
   .youtube-btn{display:inline-flex;align-items:center;justify-content:center;background:#e62117;color:#fff;border:0;border-radius:10px;padding:10px 13px;font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer;}
   .youtube-btn.disabled{opacity:.45;pointer-events:none;}
   .youtube-modal{position:fixed;inset:0;z-index:20;background:rgba(10,8,16,.88);display:flex;align-items:center;justify-content:center;padding:16px;}
-  .youtube-dialog{width:min(560px,100%);max-height:92vh;overflow:auto;background:var(--panel-2);border:1px solid #4a3e61;border-radius:18px;padding:16px;}
+  .youtube-dialog{width:min(560px,100%);max-height:calc(100dvh - 32px);overflow:auto;background:var(--panel-2);border:1px solid #4a3e61;border-radius:18px;padding:16px;}
   .youtube-dialog h3{margin:0 0 10px;color:var(--gold);font-family:'Fraunces',serif;font-size:20px;}
   .youtube-search{display:flex;gap:8px;margin-bottom:10px;}
   .youtube-search input{min-width:0;}
   .youtube-search button,.youtube-close{border:0;border-radius:10px;background:var(--gold);color:#1a1420;padding:0 13px;font-weight:700;cursor:pointer;}
   .youtube-frame{width:100%;height:310px;border:0;border-radius:12px;background:#111;}
+  .youtube-results{display:grid;gap:8px;max-height:360px;overflow:auto;margin:10px 0;}
+  .youtube-result{display:flex;gap:10px;align-items:center;width:100%;padding:8px;border:1px solid #3a3350;border-radius:12px;background:var(--panel);color:var(--text);text-align:left;cursor:pointer;}
+  .youtube-result:hover,.youtube-result:focus{border-color:var(--gold);}
+  .youtube-result img{width:112px;height:63px;object-fit:cover;border-radius:8px;background:#111;flex:0 0 auto;}
+  .youtube-result strong{display:block;font-size:13px;line-height:1.3;}
+  .youtube-result span{display:block;margin-top:4px;color:var(--text-dim);font-size:11px;}
+  .youtube-loading,.youtube-error{padding:12px;color:var(--text-dim);font-size:13px;text-align:center;}
   .youtube-link{margin-top:10px;width:100%;}
   .youtube-close{margin-top:10px;width:100%;height:42px;}
   .song-confirm{display:block;width:100%;max-width:560px;margin:10px auto 0;padding:11px;border:1px solid var(--gold);border-radius:12px;background:transparent;color:var(--gold);font-weight:600;cursor:pointer;}
@@ -265,6 +276,24 @@
   }
 
   #saveStatus{font-size:12px; color:var(--text-dim); margin-top:14px;}
+
+  @media (max-width:600px){
+    #app{max-width:none;}
+    #chatHeader{padding:12px 16px;}
+    #messages{padding:14px 12px 10px;}
+    #inputArea{padding:8px 10px max(10px, env(safe-area-inset-bottom));}
+    .row{gap:6px;}
+    .back-btn{padding:0 12px;}
+    .youtube-modal{align-items:flex-end;padding:8px;}
+    .youtube-dialog{
+      width:100%;
+      max-height:calc(100dvh - 16px);
+      border-radius:18px 18px 10px 10px;
+      padding:12px;
+    }
+    .youtube-results{max-height:42dvh;}
+    .youtube-frame{height:220px;}
+  }
 </style>
 </head>
 <body>
@@ -306,6 +335,20 @@
 /* ============ CONFIGURAZIONE ============ */
 // Incolla qui l'URL che ottieni pubblicando il tuo Google Apps Script (vedi istruzioni)
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx-oV8n5HgmUZ2FDAIfx6P6FdUH-Ai5l616SyBHDac3ZELQPAOZp-wOIFbPx88sn-PlRQ/exec';
+const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({
+  '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+}[char]));
+const isTouchDevice = () => window.matchMedia('(pointer: coarse)').matches;
+const focusForDesktop = element => {
+  if (!isTouchDevice()) setTimeout(() => element.focus(), 50);
+};
+if (window.visualViewport) {
+  const updateViewport = () => {
+    document.documentElement.style.setProperty('--visual-height', `${window.visualViewport.height}px`);
+  };
+  window.visualViewport.addEventListener('resize', updateViewport);
+  updateViewport();
+}
 
 /* ============ STEP DEFINITIONS ============ */
 const steps = [
@@ -504,14 +547,40 @@ function renderInput(step){
     youtube.onclick = ()=>{
       const modal = document.createElement('div'); modal.className='youtube-modal';
       const dialog = document.createElement('div'); dialog.className='youtube-dialog';
-      dialog.innerHTML = '<h3>Cerca e conferma il brano</h3><div class="youtube-search"><input type="text" placeholder="Cerca titolo e artista"><button type="button">Cerca</button></div><iframe class="youtube-frame" title="Ricerca YouTube"></iframe><input class="youtube-link" type="url" placeholder="Incolla qui il link del video scelto"><button class="youtube-close" type="button">Usa questo brano</button>';
+      dialog.innerHTML = '<h3>Cerca e conferma il brano</h3><div class="youtube-search"><input type="text" placeholder="Cerca titolo e artista"><button type="button">Cerca</button></div><div class="youtube-results" aria-live="polite"></div><input class="youtube-link" type="url" placeholder="In alternativa, incolla il link YouTube"><button class="youtube-close" type="button">Usa questo brano</button>';
       modal.appendChild(dialog); document.body.appendChild(modal);
       const searchInput = dialog.querySelector('.youtube-search input');
-      const frame = dialog.querySelector('iframe');
+      const results = dialog.querySelector('.youtube-results');
       const linkInput = dialog.querySelector('.youtube-link');
-      const runSearch = ()=>{
+      const runSearch = async ()=>{
         const q = searchInput.value.trim();
-        if(q) frame.src = 'https://www.youtube.com/results?search_query='+encodeURIComponent(q);
+        if(!q) return;
+        results.innerHTML = '<div class="youtube-loading">Ricerca in corso...</div>';
+        try{
+          const response = await fetch(GOOGLE_SCRIPT_URL+'?action=searchYoutube&q='+encodeURIComponent(q), {method:'GET'});
+          if(!response.ok) throw new Error('HTTP '+response.status);
+          const data = await response.json();
+          if(!data.success || !Array.isArray(data.items)) throw new Error(data.error || 'Risultati non disponibili');
+          if(!data.items.length){
+            results.innerHTML = '<div class="youtube-error">Nessun brano trovato. Prova con titolo e artista.</div>';
+            return;
+          }
+          results.innerHTML = '';
+          data.items.forEach(item=>{
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'youtube-result';
+            button.innerHTML = `<img src="${item.thumbnail || ''}" alt=""><span><strong>${escapeHtml(item.title || 'Brano senza titolo')}</strong><span>${escapeHtml(item.channelTitle || '')}</span></span>`;
+            button.onclick = ()=>{
+              input.value = `${item.title || ''} — ${item.channelTitle || ''} — YouTube: https://youtu.be/${item.videoId}`;
+              modal.remove(); updateSearch(); input.focus();
+            };
+            results.appendChild(button);
+          });
+        }catch(error){
+          results.innerHTML = '<div class="youtube-error">Ricerca non disponibile al momento. Puoi incollare qui il link YouTube esatto.</div>';
+          console.error('YouTube search failed', error);
+        }
       };
       searchInput.value = input.value.trim();
       dialog.querySelector('.youtube-search button').onclick = runSearch;
@@ -522,7 +591,7 @@ function renderInput(step){
       };
       modal.addEventListener('click', e=>{if(e.target===modal) modal.remove();});
       runSearch();
-      linkInput.focus();
+      focusForDesktop(searchInput);
     };
     const submit = ()=>{
       const val = input.value.trim();
@@ -530,8 +599,11 @@ function renderInput(step){
         if(step.optional) advance(step, '—', 'Non specificato');
         return;
       }
-      const url = /^https?:\/\/(www\.)?youtube\.com\/|^https?:\/\/youtu\.be\//i.test(val)
-        ? val
+      const selectedUrl = val.match(/YouTube:\s*(https?:\/\/\S+)/i);
+      const url = selectedUrl
+        ? selectedUrl[1]
+        : /^https?:\/\/(www\.)?youtube\.com\/|^https?:\/\/youtu\.be\//i.test(val)
+          ? val
         : 'https://www.youtube.com/results?search_query='+encodeURIComponent(val);
       advance(step, val+' — YouTube: '+url);
     };
@@ -542,7 +614,7 @@ function renderInput(step){
       skip.onclick=()=>advance(step, '—', 'Non specificato');
       area.appendChild(skip);
     }
-    setTimeout(()=>input.focus(), 50);
+    focusForDesktop(input);
   } else {
     const row = document.createElement('div'); row.className='row';
     if(idx > 0){
@@ -579,7 +651,7 @@ function renderInput(step){
       skip.onclick=()=>advance(step, '—', 'Non specificato');
       area.appendChild(skip);
     }
-    setTimeout(()=>input.focus(), 50);
+    focusForDesktop(input);
   }
 }
 
@@ -688,7 +760,7 @@ async function finish(){
   email.addEventListener('keydown', e=>{ if(e.key === 'Enter') submitFinal(email.value.trim()); });
   row.append(email, send);
   area.appendChild(row);
-  setTimeout(()=>email.focus(), 50);
+  focusForDesktop(email);
 }
 
 async function submitFinal(customerEmail){
