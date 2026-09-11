@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -591,10 +590,12 @@ let answers = {};
 let idx = 0;
 let editToken = new URLSearchParams(window.location.search).get('edit') || '';
 let savedCustomerEmail = '';
+let savedQuestionnaireReady = !editToken;
 
 function applicableSteps(){ return steps.filter(s=>!s.condition || s.condition(answers)); }
 
 function startChat(){
+  if(!savedQuestionnaireReady) return;
   document.getElementById('landing').style.display='none';
   document.getElementById('chatScreen').style.display='flex';
   idx = 0;
@@ -602,9 +603,16 @@ function startChat(){
 }
 
 async function loadSavedQuestionnaire(){
-  if(!editToken || !GOOGLE_SCRIPT_URL) return;
+  const startButton = document.querySelector('#landing .btn-primary');
+  if(editToken && startButton) startButton.disabled = true;
+  if(!editToken || !GOOGLE_SCRIPT_URL){
+    savedQuestionnaireReady = true;
+    return;
+  }
+  const controller = new AbortController();
+  const timeout = setTimeout(()=>controller.abort(), 12000);
   try{
-    const response = await fetch(GOOGLE_SCRIPT_URL+'?action=load&token='+encodeURIComponent(editToken));
+    const response = await fetch(GOOGLE_SCRIPT_URL+'?action=load&token='+encodeURIComponent(editToken), {signal: controller.signal});
     const data = await response.json();
     if(!data.success || !data.answers) throw new Error(data.error || 'Questionario non trovato');
     answers = data.answers;
@@ -616,6 +624,10 @@ async function loadSavedQuestionnaire(){
   }catch(error){
     console.error('Impossibile caricare il questionario salvato', error);
     editToken = '';
+  }finally{
+    clearTimeout(timeout);
+    savedQuestionnaireReady = true;
+    if(startButton) startButton.disabled = false;
   }
 }
 
@@ -671,6 +683,7 @@ function renderInput(step){
     const wrap = document.createElement('div'); wrap.className='choices';
     ['Sì','No'].forEach(opt=>{
       const b = document.createElement('button'); b.className='chip'; b.textContent=opt;
+      if(answers[step.id] === opt) b.classList.add('selected');
       b.onclick=()=>advance(step, opt);
       wrap.appendChild(b);
     });
@@ -680,6 +693,7 @@ function renderInput(step){
     const wrap = document.createElement('div'); wrap.className='choices';
     step.options.forEach(opt=>{
       const b = document.createElement('button'); b.className='chip'; b.textContent=opt;
+      if(answers[step.id] === opt) b.classList.add('selected');
       b.onclick=()=>advance(step, opt);
       wrap.appendChild(b);
     });
@@ -715,7 +729,10 @@ function renderInput(step){
     city.placeholder='Scrivi prima la città'; city.setAttribute('aria-label','Città della location');
     const citySuggestions=document.createElement('div'); citySuggestions.className='city-suggestions';
     cityWrap.append(city,citySuggestions); area.appendChild(cityWrap);
-    let selectedCity='';
+    const savedLocation = String(answers[step.id] || '');
+    const savedLocationText = savedLocation.split(/\s+— Google Maps:/i)[0].trim();
+    const savedCity = answers.location_city || savedLocationText.split(',').map(part=>part.trim()).filter(Boolean).slice(-2, -1)[0] || '';
+    let selectedCity=savedCity;
     let citySearchTimer = null;
     const showCity = name => {
       selectedCity=name; city.value=name; citySuggestions.innerHTML='';
@@ -752,7 +769,7 @@ function renderInput(step){
         }catch(error){ console.error('City search failed',error); }
       },250);
     };
-    city.addEventListener('input',()=>{ selectedCity=''; input.disabled=true; send.disabled=true; maps.disabled=true; row.style.display='none'; tools.style.display='none'; renderCities(); });
+    city.addEventListener('input',()=>{ selectedCity=''; selectedLocation=null; input.disabled=true; send.disabled=true; maps.disabled=true; row.style.display='none'; tools.style.display='none'; renderCities(); });
     setupMobileInput(city, renderCities, cityWrap, 'text');
     focusForDesktop(city);
     const row = document.createElement('div'); row.className='row';
@@ -763,19 +780,25 @@ function renderInput(step){
       row.appendChild(back);
     }
     const input = document.createElement('input');
-    input.type='text'; input.placeholder=step.ph; input.value=answers[step.id] || ''; input.disabled=true;
+    input.type='text'; input.placeholder=step.ph; input.value=savedLocationText; input.disabled=!selectedCity;
     const send = document.createElement('button');
     send.className='send-btn'; send.type='button'; send.textContent='✓'; send.disabled=true;
-    row.append(input, send); row.style.display='none'; area.appendChild(row);
+    row.append(input, send); row.style.display=selectedCity ? 'flex' : 'none'; area.appendChild(row);
     const tools = document.createElement('div'); tools.className='location-tools';
     const maps = document.createElement('button'); maps.className='maps-btn'; maps.type='button'; maps.textContent='Cerca location'; maps.disabled=true;
-    tools.appendChild(maps); tools.style.display='none'; area.appendChild(tools);
-    let selectedLocation = null;
+    tools.appendChild(maps); tools.style.display=selectedCity ? 'flex' : 'none'; area.appendChild(tools);
+    let selectedLocation = savedLocationText ? {display_name:savedLocationText, name:savedLocationText.split(',')[0]} : null;
+    if(selectedCity){
+      send.disabled=false;
+      maps.disabled=false;
+      cityWrap.style.display='none';
+    }
     const submit = ()=>{
       const val=input.value.trim();
       if(!selectedCity || !val || !selectedLocation) return;
       if(!selectedLocation) return;
       const mapsUrl='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(selectedLocation.display_name);
+      answers.location_city = selectedCity;
       advance(step, selectedLocation.display_name+' — Google Maps: '+mapsUrl, selectedLocation.display_name+' — Google Maps: '+mapsUrl);
     };
     const openMaps = async ()=>{
