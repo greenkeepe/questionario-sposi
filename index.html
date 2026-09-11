@@ -202,12 +202,13 @@
     touch-action:manipulation;
   }
   .keyboard-key:active{background:var(--gold);color:#1a1420;}
+  .keyboard-actions .keyboard-space{grid-column:span 2;}
   .custom-keyboard.numeric .keyboard-key{
     min-height:52px;
     font-size:20px;
   }
   .custom-keyboard.numeric .keyboard-row.keyboard-actions{
-    grid-template-columns:repeat(3,1fr);
+    grid-template-columns:repeat(2,1fr);
     order:-1;
   }
   .keyboard-key.keyboard-wide{font-size:12px;}
@@ -250,6 +251,7 @@
   }
   .song-tools{max-width:560px;margin:8px auto 0;display:flex;gap:8px;align-items:center;}
   .location-tools{max-width:560px;margin:8px auto 0;display:flex;gap:8px;align-items:center;}
+  .location-city{width:100%;margin-bottom:8px;}
   .maps-btn{flex:1;border:0;border-radius:10px;background:#4285f4;color:#fff;padding:11px 13px;font-size:13px;font-weight:600;cursor:pointer;}
   .location-results{display:grid;gap:8px;max-height:42dvh;overflow:auto;margin:12px 0;}
   .location-result{display:block;width:100%;padding:11px;border:1px solid #3a3350;border-radius:12px;background:var(--panel);color:var(--text);text-align:left;cursor:pointer;}
@@ -436,8 +438,13 @@ function showCustomKeyboard(input, submit, mount, mode='text'){
     input.dispatchEvent(new Event('input', {bubbles:true}));
   }, 'keyboard-wide');
   if(mode !== 'numeric') addKey(actions, '@', ()=>write('@'));
-  addKey(actions, 'Spazio', ()=>write(' '), 'keyboard-wide');
-  addKey(actions, 'Invio', submit, 'keyboard-wide');
+  const spaceKey = document.createElement('button');
+  spaceKey.type = 'button';
+  spaceKey.className = 'keyboard-key keyboard-wide keyboard-space';
+  spaceKey.textContent = 'Spazio';
+  spaceKey.addEventListener('pointerdown', event => event.preventDefault());
+  spaceKey.addEventListener('click', ()=>write(' '));
+  actions.appendChild(spaceKey);
   customKeyboard.appendChild(actions);
   mount.appendChild(customKeyboard);
   input.blur();
@@ -464,7 +471,6 @@ function setupMobileInput(input, submit, mount, kind='text'){
   };
   input.addEventListener('pointerdown', open);
   input.addEventListener('click', open);
-  showCustomKeyboard(input, submit, mount, kind === 'number' ? 'numeric' : 'text');
 }
 const focusForDesktop = element => {
   if (!isTouchDevice()) setTimeout(() => element.focus({preventScroll:true}), 50);
@@ -642,6 +648,16 @@ function renderInput(step){
     area.appendChild(confirm);
 
   } else if(step.type === 'location'){
+    const city = document.createElement('select');
+    city.className='location-city';
+    city.setAttribute('aria-label','Città della location');
+    city.innerHTML='<option value="">Seleziona prima la città</option>'+[
+      'Roma','Milano','Napoli','Torino','Palermo','Genova','Bologna','Firenze','Bari','Venezia',
+      'Verona','Messina','Padova','Trieste','Taranto','Brescia','Parma','Prato','Modena','Reggio Emilia',
+      'Perugia','Ravenna','Livorno','Cagliari','Foggia','Rimini','Salerno','Ferrara','Sassari','Monza',
+      'Bergamo','Pescara','Trento','Forlì','Siracusa','Vicenza','Terni','Bolzano','Novara','Piacenza'
+    ].map(name=>`<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');
+    area.appendChild(city);
     const row = document.createElement('div'); row.className='row';
     if(idx > 0){
       const back = document.createElement('button');
@@ -660,14 +676,15 @@ function renderInput(step){
     let selectedLocation = null;
     const submit = ()=>{
       const val=input.value.trim();
-      if(!val) return;
+      if(!city.value || !val || !selectedLocation) return;
       if(!selectedLocation) return;
       const mapsUrl='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(selectedLocation.display_name);
       advance(step, selectedLocation.display_name+' — Google Maps: '+mapsUrl, selectedLocation.display_name+' — Google Maps: '+mapsUrl);
     };
     const openMaps = async ()=>{
       const query=input.value.trim();
-      if(!query) return;
+      if(!city.value || !query) return;
+      const fullQuery=query+', '+city.value+', Italia';
       const modal=document.createElement('div'); modal.className='youtube-modal';
       const dialog=document.createElement('div'); dialog.className='youtube-dialog';
       dialog.innerHTML='<h3>Seleziona la location esatta</h3><div class="location-results" aria-live="polite"><div class="youtube-loading">Ricerca in corso...</div></div><button class="location-confirm" type="button" disabled>Conferma location selezionata</button><button class="youtube-close" type="button">Modifica ricerca</button>';
@@ -675,7 +692,7 @@ function renderInput(step){
       const results=dialog.querySelector('.location-results');
       const confirm=dialog.querySelector('.location-confirm');
       try{
-        const response=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6&accept-language=it&q='+encodeURIComponent(query),{headers:{Accept:'application/json'}});
+        const response=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=8&accept-language=it&countrycodes=it&q='+encodeURIComponent(fullQuery),{headers:{Accept:'application/json'}});
         if(!response.ok) throw new Error('HTTP '+response.status);
         const places=await response.json();
         results.innerHTML='';
